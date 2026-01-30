@@ -185,7 +185,7 @@ const sanitizeToolIds = (node) => {
 
     if (Array.isArray(node.tool_calls)) {
         node.tool_calls.forEach((call) => {
-            if (call && call.id) {
+            if (call?.id) {
                 const normalized = normalizeToolId(call.id);
                 if (normalized) {
                     call.id = normalized;
@@ -210,7 +210,9 @@ const server = http.createServer((req, res) => {
     }
 
     let body = '';
-    req.on('data', chunk => body += chunk);
+    req.on('data', (chunk) => {
+        body += chunk;
+    });
     req.on('end', () => {
         try {
             // Parse and fix the request body
