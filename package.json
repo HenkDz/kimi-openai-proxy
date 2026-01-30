@@ -1,0 +1,31 @@
+{
+  "name": "kimi-openai-proxy",
+  "version": "1.0.0",
+  "description": "OpenAI-compatible proxy for Moonshot AI's Kimi K2.5 - enables Kimi in VS Code Copilot Chat, BrowserOS, and other OpenAI-compatible tools",
+  "main": "kimi-proxy.js",
+  "scripts": {
+    "start": "node kimi-proxy.js",
+    "dev": "set DEBUG_KIMI_PROXY=1 && node kimi-proxy.js"
+  },
+  "keywords": [
+    "kimi",
+    "moonshot",
+    "openai",
+    "proxy",
+    "k2.5",
+    "vscode",
+    "copilot",
+    "browseros",
+    "ai",
+    "llm"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

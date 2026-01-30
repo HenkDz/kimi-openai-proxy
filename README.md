@@ -1,0 +1,162 @@
+# 🌙 Kimi OpenAI-Compatible Proxy
+
+A lightweight proxy server that makes **Moonshot AI's Kimi K2.5** work seamlessly with OpenAI-compatible clients like **VS Code Copilot Chat**, **BrowserOS**, and other IDE integrations.
+
+## ✨ Why This Exists
+
+Moonshot AI's Kimi K2.5 is a powerful reasoning model, but it has specific requirements that break compatibility with standard OpenAI clients:
+
+1. **Fixed parameters**: Kimi K2.5 requires specific `temperature`, `top_p`, `n`, `presence_penalty`, and `frequency_penalty` values
+2. **Required `reasoning_content`**: When thinking is enabled (default for K2.5), ALL assistant messages need a `reasoning_content` field
+3. **Tool ID sanitization**: Some clients send tool call IDs with characters that Kimi's API rejects
+
+This proxy sits between your OpenAI-compatible client and Moonshot's API, automatically fixing these issues.
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js (v14 or higher)
+- A Moonshot AI API key from [platform.moonshot.cn](https://platform.moonshot.cn)
+
+### Installation
+
+1. Clone or download this repository
+2. Navigate to the proxy folder:
+   ```bash
+   cd kimi-openai-proxy
+   ```
+3. Start the proxy:
+   ```bash
+   node kimi-proxy.js
+   ```
+
+The proxy will start on `http://localhost:3001`.
+
+## 🔧 Configuration
+
+### VS Code Copilot Chat
+
+1. Install an extension that allows custom OpenAI endpoints (like "ChatGPT" or "Continue")
+2. Configure the base URL to: `http://localhost:3001/v1`
+3. Set your API key to your Moonshot API key
+4. Use model name: `kimi-k2.5`
+
+Example settings for Continue extension:
+```json
+{
+  "models": [
+    {
+      "title": "Kimi K2.5",
+      "provider": "openai",
+      "model": "kimi-k2.5",
+      "apiBase": "http://localhost:3001/v1",
+      "apiKey": "your-moonshot-api-key"
+    }
+  ]
+}
+```
+
+### BrowserOS / Other Tools
+
+Any tool that supports OpenAI-compatible endpoints:
+- Base URL: `http://localhost:3001`
+- Model: `kimi-k2.5` or any model containing "kimi" or "moonshot"
+- API Key: Your Moonshot API key
+
+## 🛠️ How It Works
+
+When a request comes through the proxy, it automatically:
+
+### 1. Fixes Parameters
+```javascript
+data.temperature = 1;
+data.top_p = 0.95;
+data.n = 1;
+data.presence_penalty = 0.0;
+data.frequency_penalty = 0.0;
+```
+
+### 2. Adds Required `reasoning_content`
+Kimi K2.5 has thinking enabled by default. The API requires `reasoning_content` on:
+- All assistant messages with tool calls
+- All assistant messages when using a thinking model
+
+The proxy adds a placeholder space (`' '`) if missing.
+
+### 3. Sanitizes Tool IDs
+Normalizes tool call IDs to only contain valid characters: `a-zA-Z0-9_-`
+
+## 📋 Supported Models
+
+The proxy activates for any model name containing:
+- `kimi` (case-insensitive)
+- `moonshot` (case-insensitive)
+
+Examples:
+- `kimi-k2.5` ✅
+- `kimi-k1.5` ✅
+- `moonshot-v1-8k` ✅
+- `gpt-4` ❌ (passes through unchanged)
+
+## 🔍 Debugging
+
+The proxy logs all modifications to the console:
+
+```
+[2026-01-31T12:00:00.000Z] Processing request for model: kimi-k2.5
+[2026-01-31T12:00:00.000Z] Processing 8 messages, needsReasoningOnAllAssistant=true
+  msg[0] role=system hasToolCalls=false hasFunctionCall=false hasToolBlocks=false has_reasoning_content=false
+  msg[1] role=user hasToolCalls=false hasFunctionCall=false hasToolBlocks=false has_reasoning_content=false
+  msg[2] role=assistant hasToolCalls=true hasFunctionCall=false hasToolBlocks=false has_reasoning_content=false
+    -> Added reasoning_content=' ' to msg[2]
+  msg[3] role=tool hasToolCalls=false hasFunctionCall=false hasToolBlocks=false has_reasoning_content=false
+[2026-01-31T12:00:00.000Z] Patched request params for kimi-k2.5
+```
+
+## 🌐 Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Proxy server port | `3001` |
+| `TARGET_HOST` | Moonshot API host | `api.moonshot.ai` |
+| `DEBUG_KIMI_PROXY` | Enable verbose logging | `false` |
+
+## 🐛 Troubleshooting
+
+### Error: "thinking is enabled but reasoning_content is missing"
+- ✅ This proxy fixes this automatically
+- Make sure the proxy is running before making requests
+- Check the logs to see which messages are being patched
+
+### Error: "temperature must be 1"
+- ✅ This proxy sets temperature to 1 automatically
+- Some clients override this; check your client settings
+
+### Error: "Invalid tool call ID"
+- ✅ This proxy sanitizes tool IDs automatically
+- If you still see this, check the logs for the problematic ID
+
+## 🤝 Contributing
+
+Found an issue with another OpenAI-compatible client? The proxy likely needs to handle another edge case:
+
+1. Check the error message from Moonshot's API
+2. Look at what the client is sending vs. what Kimi expects
+3. Add a transform in `ensureReasoningContentForToolCalls()` or `sanitizeToolIds()`
+
+Pull requests welcome!
+
+## 📄 License
+
+MIT License - feel free to use this in your projects!
+
+## 🙏 Acknowledgments
+
+- Moonshot AI for the Kimi K2.5 model
+- The OpenAI API specification that makes this proxy possible
+- All the OpenAI-compatible tools that benefit from this workaround
+
+---
+
+**Made with ❤️ for the AI developer community**
